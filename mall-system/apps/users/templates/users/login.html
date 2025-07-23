@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <style>
+        body {
+            background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: #fff;
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 40px 30px 30px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(60, 120, 200, 0.15);
+        }
+        .login-container h2 {
+            text-align: center;
+            color: #3a7bd5;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .login-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .form-row label {
+            flex: 0 0 80px;
+            margin-right: 8px;
+            font-size: 15px;
+            color: #333;
+        }
+        .form-row input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #cfd8dc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-row input:focus {
+            border-color: #3a7bd5;
+            outline: none;
+        }
+        .login-container button {
+            background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .login-container button:hover {
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+        .login-container .register-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #3a7bd5;
+            text-decoration: none;
+            font-size: 15px;
+        }
+        .login-container .register-link:hover {
+            text-decoration: underline;
+        }
+        .login-container .errorlist {
+            color: #e53935;
+            margin-bottom: 10px;
+            list-style: none;
+            padding-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>用户登录</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <label for="{{ form.username.id_for_label }}">用户名</label>
+                {{ form.username }}
+            </div>
+            <div class="form-row">
+                <label for="{{ form.password.id_for_label }}">密码</label>
+                {{ form.password }}
+            </div>
+            <button type="submit">登录</button>
+        </form>
+        <a class="register-link" href="{% url 'register' %}">没有账号？去注册</a>
+    </div>
+    <div class="auth-container" style="text-align: center; margin-top: 20px;">
+        {% if request.user.is_authenticated %}
+            <p>欢迎，{{ request.user.username }}</p>
+            <a href="{% url 'logout' %}">退出登录</a>
+        {% else %}
+            <a href="{% url 'login' %}">登录</a>
+        {% endif %}
+    </div>
+</body>
+</html>

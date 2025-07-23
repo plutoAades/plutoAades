@@ -1,0 +1,21 @@
+body, .module, .grp-module {
+    background: linear-gradient(120deg, #f8fffe 0%, #e0e7ff 100%) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+#header {
+    background: #3a7bd5 !important;
+    color: #fff !important;
+}
+#user-tools {
+    color: #fff !important;
+}
+a {
+    color: #3a7bd5 !important;
+}
+.button, input[type=submit], input[type=button], .submit-row input {
+    background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 8px 16px !important;
+}

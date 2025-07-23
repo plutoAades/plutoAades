@@ -1,0 +1,13 @@
+<h2>{{ product.name }}</h2>
+<p>描述：{{ product.description }}</p>
+<p>价格：{{ product.price }}</p>
+<p>库存：{{ product.stock }}</p>
+{% if product.images.all %}
+    <div>
+        <h4>商品图片：</h4>
+        {% for img in product.images.all %}
+            <img src="{{ img.image.url }}" class="product-image" alt="{{ product.name }} 图片">
+        {% endfor %}
+    </div>
+{% endif %}
+<a href="{% url 'product_list' %}">返回商品列表</a>

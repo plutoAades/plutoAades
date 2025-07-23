@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>商品列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .product-list-container {
+            background: #fff;
+            max-width: 700px;
+            margin: 60px auto;
+            padding: 40px 30px 30px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(60, 120, 200, 0.15);
+        }
+        .user-info-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 18px;
+            font-size: 15px;
+            color: #3a7bd5;
+            position: relative;
+        }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .user-dropdown-btn {
+            background: none;
+            border: none;
+            color: #3a7bd5;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .user-dropdown-btn:hover, .user-dropdown-btn:focus {
+            background: #e3eafc;
+        }
+        .user-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 32px;
+            background: #fff;
+            min-width: 180px;
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+            border-radius: 8px;
+            z-index: 100;
+            padding: 12px 0;
+        }
+        .user-dropdown:hover .user-dropdown-content,
+        .user-dropdown:focus-within .user-dropdown-content {
+            display: block;
+        }
+        .user-dropdown-content a, .user-dropdown-content span {
+            display: block;
+            padding: 10px 24px;
+            color: #3a7bd5;
+            text-decoration: none;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .user-dropdown-content a.logout-link {
+            color: #e53935;
+        }
+        .user-dropdown-content a:hover, .user-dropdown-content span:hover {
+            background: #f7fbff;
+        }
+        h2 {
+            text-align: center;
+            color: #3a7bd5;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .product-item {
+            display: flex;
+            align-items: center;
+            background: #f7fbff;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(60,120,200,0.06);
+            transition: box-shadow 0.2s;
+        }
+        .product-item:hover {
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+        }
+        .product-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 24px;
+            background: #e3eafc;
+            border: 1px solid #e3eafc;
+        }
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .product-name {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .product-name:hover {
+            color: #3a7bd5;
+            text-decoration: underline;
+        }
+        .product-price {
+            font-size: 16px;
+            color: #3a7bd5;
+            font-weight: bold;
+        }
+        .add-cart-btn {
+            background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-left: 24px;
+            transition: background 0.2s;
+        }
+        .add-cart-btn:hover {
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+        .cart-count {
+            background: #3a7bd5;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 13px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        /* 新增购物车弹窗样式 */
+        .cart-popup {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: #fff;
+            min-width: 260px;
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+            border-radius: 8px;
+            z-index: 200;
+            padding: 16px 12px 12px 12px;
+        }
+        .cart-popup h4 {
+            margin: 0 0 10px 0;
+            color: #3a7bd5;
+            font-size: 16px;
+        }
+        .cart-popup ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .cart-popup li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .cart-action-btn {
+            background: #3a7bd5;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin-left: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .cart-action-btn:hover {
+            background: #00d2ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="product-list-container">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <div>
+                <a href="/chat/room/{{ request.user.username }}/" class="add-cart-btn">聊天室</a>
+            </div>
+            <div class="user-info-bar">
+                <div class="user-dropdown" tabindex="0">
+                    <button class="user-dropdown-btn">
+                        {{ request.user.username }} <span style="font-size:12px;">▼</span>
+                    </button>
+                    <div class="user-dropdown-content">
+                        <span>用户名：{{ request.user.username }}</span>
+                        <span>邮箱：{{ request.user.email|default:"未填写" }}</span>
+                        <span>手机号：{{ request.user.phone|default:"未填写" }}</span>
+                        <span>注册时间：{{ request.user.date_joined|date:"Y-m-d H:i" }}</span>
+                        <a href="{% url 'user_profile' %}">个人资料</a>
+                        <a class="logout-link" href="{% url 'logout' %}">退出登录</a>
+                    </div>
+                </div>
+                <span class="cart-count" id="cart-count-btn" tabindex="0">购物车：{{ cart_total_count|default:0 }}</span>
+                <div id="cart-popup" class="cart-popup">
+                    <h4>购物车明细</h4>
+                    <ul>
+                        {% for item in cart_items %}
+                        <li>
+                            <span>{{ item.product.name }}</span>
+                            <span>￥{{ item.product.price }}</span>
+                            <span>数量：{{ item.quantity }}</span>
+                            <form method="post" action="{% url 'add_to_cart' item.product.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cart-action-btn">+</button>
+                            </form>
+                            <form method="post" action="{% url 'remove_from_cart' item.product.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cart-action-btn">-</button>
+                            </form>
+                        </li>
+                        {% empty %}
+                        <li>购物车为空</li>
+                        {% endfor %}
+                    </ul>
+                    <div style="margin-top:10px;text-align:right;">
+                        <strong>总价：￥{{ cart_total_price }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h2>商品列表</h2>
+        <ul class="product-list">
+            {% for product in products %}
+                <li class="product-item">
+                    {% if product.images.first %}
+                        <img class="product-img" src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <img class="product-img" src="https://via.placeholder.com/80x80?text=暂无图片" alt="暂无图片">
+                    {% endif %}
+                    <div class="product-info">
+                        <a class="product-name" href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+                        <span class="product-price">￥{{ product.price }}</span>
+                    </div>
+                    <form method="post" action="{% url 'add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="add-cart-btn">加入购物车</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+        {% if request.user.is_authenticated %}
+            <p>欢迎，{{ request.user.username }}</p>
+            <a href="{% url 'logout' %}">退出登录</a>
+        {% else %}
+            <a href="{% url 'login' %}">登录</a>
+        {% endif %}
+    </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    var cartBtn = document.getElementById('cart-count-btn');
+    var cartPopup = document.getElementById('cart-popup');
+    cartBtn.addEventListener('click', function(e) {
+        cartPopup.style.display = cartPopup.style.display === 'block' ? 'none' : 'block';
+        e.stopPropagation();
+    });
+    document.addEventListener('click', function() {
+        cartPopup.style.display = 'none';
+    });
+    cartPopup.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
+</body>
+</html>

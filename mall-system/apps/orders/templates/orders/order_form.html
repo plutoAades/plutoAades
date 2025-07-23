@@ -1,0 +1,5 @@
+<h2>创建订单</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">提交订单

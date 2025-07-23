@@ -1,0 +1,6 @@
+<h2>订单列表</h2>
+<ul>
+    {% for order in orders %}
+        <li>订单ID: {{ order.id }}，用户: {{ order.user.username }}，商品: {{ order.product.name }}，数量: {{ order.quantity }}，状态: {{ order.status }}</li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,11 @@
+<h2>创建群聊</h2>
+<form method="post">
+    {% csrf_token %}
+    <label for="group-name">群聊名称：</label>
+    <input type="text" id="group-name" name="name" required placeholder="请输入群聊名称"><br>
+    选择成员：<br>
+    {% for user in users %}
+        <label><input type="checkbox" name="members" value="{{ user.id }}"> {{ user.username }}</label><br>
+    {% endfor %}
+    <button type="submit">创建</button>
+</form>
