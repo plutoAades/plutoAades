@@ -4,12 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人资料</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 220px;
+            background: #232e3c;
+            color: #fff;
+            padding-top: 30px;
+            flex-shrink: 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+        }
+        .sidebar h2 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+        .menu-group {
+            margin-bottom: 24px;
+        }
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 28px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        .sidebar a.active, .sidebar a:hover {
+            background: #007bff;
+        }
+        .sidebar .icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        .main {
+            flex: 1;
+            padding: 40px 32px;
+            background: #fff;
+        }
+        @media (max-width: 700px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; padding: 10px 0; box-shadow: none; }
+            .sidebar h2 { margin-bottom: 10px; }
+            .sidebar a { margin: 0 4px 0 0; padding: 10px 8px; border-radius: 4px; font-size: 15px;}
+            .main { padding: 16px 8px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>个人资料</h1>
-    <p>用户名：{{ user.username }}</p>
-    <p>邮箱：{{ user.email }}</p>
-    <p>注册时间：{{ user.date_joined|date:"Y-m-d H:i" }}</p>
-    <a href="{% url 'logout' %}">退出登录</a>
+    <div class="container">
+        <nav class="sidebar">
+            <h2>管理菜单</h2>
+            <div class="menu-group">
+                <a href="{% url 'profile' %}" class="active"><span class="icon">👤</span>个人资料</a>
+                <a href="{% url 'product_list' %}"><span class="icon">🛒</span>商品列表</a>
+                <a href="{% url 'order_list' %}"><span class="icon">📦</span>我的订单</a>
+                <a href="{% url 'chat_room_list' %}"><span class="icon">💬</span>聊天室</a>
+            </div>
+            <div class="menu-group">
+                <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
+            </div>
+        </nav>
+        <div class="main">
+            <h1>个人资料</h1>
+            <p>用户名：{{ user.username }}</p>
+            <p>邮箱：{{ user.email }}</p>
+            <p>注册时间：{{ user.date_joined|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
 </body>
 </html>

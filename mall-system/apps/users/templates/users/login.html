@@ -103,13 +103,13 @@
         </form>
         <a class="register-link" href="{% url 'register' %}">没有账号？去注册</a>
     </div>
-    <div class="auth-container" style="text-align: center; margin-top: 20px;">
+    <!-- <div class="auth-container" style="text-align: center; margin-top: 20px;">
         {% if request.user.is_authenticated %}
             <p>欢迎，{{ request.user.username }}</p>
             <a href="{% url 'logout' %}">退出登录</a>
         {% else %}
             <a href="{% url 'login' %}">登录</a>
         {% endif %}
-    </div>
+    </div> -->
 </body>
 </html>

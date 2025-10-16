@@ -1,0 +1,50 @@
+<!-- filepath: d:\django_smshopipng\mall-system\apps\products\templates\products\products_navbar.html -->
+<div class="header-bar">
+    <a href="/chat/room/{{ request.user.username }}/" class="add-cart-btn">聊天室</a>
+    <div class="user-info-bar">
+        <div class="user-dropdown" tabindex="0">
+            <button class="user-dropdown-btn">
+                {{ request.user.username|default:"游客" }} ▼
+            </button>
+            <div class="user-dropdown-content">
+                {% if request.user.is_authenticated %}
+                    <span>用户名：{{ request.user.username }}</span>
+                    <span>邮箱：{{ request.user.email|default:"未填写" }}</span>
+                    <span>手机号：{{ request.user.phone|default:"未填写" }}</span>
+                    <a href="{% url 'user_profile' %}">个人资料</a>
+                    <a class="logout-link" href="{% url 'logout' %}">退出登录</a>
+                {% else %}
+                    <a href="{% url 'login' %}">登录</a>
+                {% endif %}
+            </div>
+        </div>
+        {% if request.user.is_authenticated %}
+            <span class="cart-count" id="cart-count-btn" tabindex="0">🛒 {{ cart_total_count|default:0 }}</span>
+            <div id="cart-popup" class="cart-popup">
+                <h4 style="margin:0 0 10px 0;color:#3a7bd5;">购物车明细</h4>
+                <ul>
+                    {% for item in cart_items %}
+                        <li>
+                            <span>{{ item.product.name }}</span>
+                            <span>￥{{ item.product.price }}</span>
+                            <span>x {{ item.quantity }}</span>
+                            <form method="post" action="{% url 'add_to_cart' item.product.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cart-action-btn">+</button>
+                            </form>
+                            <form method="post" action="{% url 'remove_from_cart' item.product.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cart-action-btn">-</button>
+                            </form>
+                        </li>
+                    {% empty %}
+                        <li>购物车为空</li>
+                    {% endfor %}
+                </ul>
+                <div style="margin-top:10px;text-align:right;">
+                    <strong>总价：￥{{ cart_total_price|default:0 }}</strong>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>

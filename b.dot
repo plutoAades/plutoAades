@@ -1,0 +1,35 @@
+digraph ecommerce_er {
+    graph [rankdir=LR, fontsize=12, fontname="Microsoft YaHei"];
+    node [shape=record, fontsize=10, fontname="Microsoft YaHei", style=filled, fillcolor=white];
+
+    User [label="{用户(User)|PK user_id:int\lusername:varchar\lpassword:varchar\lemail:varchar\lphone:varchar\lrole:enum(user/admin)\lcreate_time:datetime\l}"];
+
+    Product [label="{商品(Product)|PK product_id:int\lname:varchar\ldescription:text\lprice:decimal\lstock:int\lcategory_id:int(FK)\lcreate_time:datetime\l}"];
+
+    Category [label="{商品分类(Category)|PK category_id:int\lname:varchar\ldescription:varchar\l}"];
+
+    Cart [label="{购物车(Cart)|PK cart_id:int\luser_id:int(FK)\lcreate_time:datetime\l}"];
+
+    CartItem [label="{购物车项(CartItem)|PK cart_item_id:int\lcart_id:int(FK)\lproduct_id:int(FK)\lquantity:int\l}"];
+
+    Order [label="{订单(Order)|PK order_id:int\luser_id:int(FK)\lorder_number:varchar\lstatus:enum\ltotal_amount:decimal\lcreate_time:datetime\l}"];
+
+    OrderItem [label="{订单明细(OrderItem)|PK order_item_id:int\lorder_id:int(FK)\lproduct_id:int(FK)\lquantity:int\lprice:decimal\l}"];
+
+    Review [label="{评价(Review)|PK review_id:int\luser_id:int(FK)\lproduct_id:int(FK)\lcontent:text\lrating:int\lcreate_time:datetime\l}"];
+
+    Message [label="{消息(Message)|PK message_id:int\lsender_id:int(FK)\lreceiver_id:int(FK)\lcontent:text\ltimestamp:datetime\l}"];
+
+
+    User -> Cart [label="1..1"];
+    Cart -> CartItem [label="1..*"];
+    User -> Order [label="1..*"];
+    Order -> OrderItem [label="1..*"];
+    Product -> OrderItem [label="1..*"];
+    User -> Review [label="1..*"];
+    Product -> Review [label="1..*"];
+    Category -> Product [label="1..*"];
+    User -> Message [label="发送"];
+    User -> Message [label="接收"];
+    CartItem -> Product [label="1..*"];
+}

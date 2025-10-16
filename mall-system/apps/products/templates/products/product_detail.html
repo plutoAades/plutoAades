@@ -1,13 +1,288 @@
-<h2>{{ product.name }}</h2>
-<p>描述：{{ product.description }}</p>
-<p>价格：{{ product.price }}</p>
-<p>库存：{{ product.stock }}</p>
-{% if product.images.all %}
-    <div>
-        <h4>商品图片：</h4>
-        {% for img in product.images.all %}
-            <img src="{{ img.image.url }}" class="product-image" alt="{{ product.name }} 图片">
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ product.name }} - 商品详情</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .product-list-container {
+            background: #fff;
+            max-width: 720px;
+            margin: 60px auto;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(60, 120, 200, 0.15);
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .user-info-bar {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .user-dropdown-btn {
+            background: none;
+            border: none;
+            color: #3a7bd5;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .user-dropdown-btn:hover {
+            background: #e3eafc;
+        }
+        .user-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: #fff;
+            min-width: 180px;
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+            border-radius: 8px;
+            z-index: 100;
+            padding: 12px 0;
+        }
+        .user-dropdown:hover .user-dropdown-content {
+            display: block;
+        }
+        .user-dropdown-content span, .user-dropdown-content a {
+            display: block;
+            padding: 8px 20px;
+            color: #3a7bd5;
+            text-decoration: none;
+        }
+        .user-dropdown-content a.logout-link { color: #e53935; }
+
+        .cart-count {
+            background: #3a7bd5;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 13px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .cart-popup {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: #fff;
+            min-width: 260px;
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+            border-radius: 8px;
+            z-index: 200;
+            padding: 16px 12px 12px 12px;
+        }
+        .cart-popup ul { list-style: none; padding: 0; margin: 0; }
+        .cart-popup li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .cart-action-btn {
+            background: #3a7bd5;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin-left: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #3a7bd5;
+            margin-bottom: 25px;
+            font-size: 26px;
+        }
+        .product-info {
+            margin-bottom: 25px;
+            font-size: 17px;
+            line-height: 1.6;
+            color: #444;
+        }
+        .price {
+            font-size: 20px;
+            color: #3a7bd5;
+            font-weight: bold;
+        }
+        .stock {
+            color: #555;
+        }
+        .carousel {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
+        }
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel-images img {
+            width: 100%;
+            height: 360px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(58,123,213,0.8);
+            border: none;
+            color: white;
+            font-size: 22px;
+            padding: 8px 14px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .carousel-btn:hover { background: rgba(0,210,255,0.8); }
+        .carousel-btn.prev { left: 10px; }
+        .carousel-btn.next { right: 10px; }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 16px;
+        }
+        .btn {
+            background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+        .btn.back {
+            background: #ccc;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="product-list-container">
+        <!-- 优化：导航栏抽取为独立模板 -->
+        {% include "products/products_navbar.html" %}
+
+        <!-- 商品详情内容 -->
+        <h2>{{ product.name }}</h2>
+        {% if product.images.all %}        {% for product in products %}
+            <!-- 商品内容 -->
         {% endfor %}
+        
+        <div class="pagination">
+            {% if products.has_previous %}
+                <a href="?page={{ products.previous_page_number }}">上一页</a>
+            {% endif %}
+            <span>第 {{ products.number }} 页 / 共 {{ products.paginator.num_pages }} 页</span>
+            {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}">下一页</a>
+            {% endif %}
+        </div>
+            <div class="carousel">
+                <div class="carousel-images" id="carousel-images">
+                    {% for img in product.images.all %}
+                        <img src="{{ img.image.url }}" alt="{{ product.name }} 图片">
+                    {% endfor %}
+                </div>
+                {% if product.images.count > 1 %}
+                    <button class="carousel-btn prev" id="prev-btn">&#10094;</button>
+                    <button class="carousel-btn next" id="next-btn">&#10095;</button>
+                {% endif %}
+            </div>
+        {% else %}
+            <img src="https://via.placeholder.com/600x360?text=暂无图片" alt="暂无图片" style="display:block;width:100%;border-radius:10px;">
+        {% endif %}
+
+        <div class="product-info">
+            <p><strong>描述：</strong>{{ product.description|default:"暂无描述" }}</p>
+            <p class="price">价格：￥{{ product.price }}</p>
+            <p class="stock">库存：{{ product.stock }}</p>
+        </div>
+
+        <div class="actions">
+            <form method="post" action="{% url 'add_to_cart' product.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">加入购物车</button>
+            </form>
+            <a href="{% url 'product_list' %}?page=1" class="btn back">返回列表</a>
+        </div>
     </div>
-{% endif %}
-<a href="{% url 'product_list' %}">返回商品列表</a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 顶部购物车弹窗逻辑
+            var cartBtn = document.getElementById('cart-count-btn');
+            var cartPopup = document.getElementById('cart-popup');
+            if (cartBtn && cartPopup) {
+                cartBtn.addEventListener('click', function(e) {
+                    cartPopup.style.display = (cartPopup.style.display === 'block') ? 'none' : 'block';
+                    e.stopPropagation();
+                });
+                document.addEventListener('click', function() { cartPopup.style.display = 'none'; });
+                cartPopup.addEventListener('click', function(e) { e.stopPropagation(); });
+            }
+
+            // 商品图片轮播逻辑
+            const carouselImages = document.getElementById('carousel-images');
+            if (!carouselImages) return;
+            const images = carouselImages.children;
+            let index = 0;
+            const total = images.length;
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            function updateCarousel() {
+                carouselImages.style.transform = `translateX(-${index * 100}%)`;
+            }
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => {
+                    index = (index - 1 + total) % total;
+                    updateCarousel();
+                });
+                nextBtn.addEventListener('click', () => {
+                    index = (index + 1) % total;
+                    updateCarousel();
+                });
+            }
+            if (total > 1) {
+                setInterval(() => {
+                    index = (index + 1) % total;
+                    updateCarousel();
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>
