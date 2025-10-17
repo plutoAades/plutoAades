@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('private/<int:user_id>/', views.private_chat, name='private_chat'),
-    path('send/', views.send_private_message, name='send_private_message'),
-    path('delete/<int:message_id>/', views.delete_private_message, name='delete_private_message'),
+    path('history/<str:username>/', views.messages_history, name='chat_messages_history'),
+    path('send_ajax/', views.send_ajax_message, name='chat_send_ajax'),
+    # 可选：其它 chat 路由...
 ]

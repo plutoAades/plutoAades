@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title>数据统计 - 管理后台</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 复用 dashboard 的布局样式（简化版） */
+        body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#f4f4f4;}
+        .container{display:flex;min-height:100vh;}
+        .sidebar{width:220px;background:#232e3c;color:#fff;padding-top:30px;flex-shrink:0;box-shadow:2px 0 8px rgba(0,0,0,0.04);}
+        .sidebar h2{text-align:center;font-size:20px;margin-bottom:20px;font-weight:600;}
+        .menu-group{margin-bottom:20px;}
+        .sidebar a{display:flex;align-items:center;color:#fff;text-decoration:none;padding:10px 20px;margin-bottom:6px;border-radius:6px;font-size:15px;}
+        .sidebar a:hover,.sidebar a.active{background:#007bff;}
+        .icon{margin-right:10px;}
+        .main{flex:1;padding:28px;background:#fff;}
+        .wrap{max-width:1100px;margin:0 auto;background:#fff;padding:24px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.06);}
+        h1{color:#3a7bd5;margin:0 0 12px 0;}
+        .row{display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;}
+        .card{flex:1;min-width:320px;padding:16px;border-radius:8px;background:#fbfdff;border:1px solid #f0f6ff;}
+        .title{font-size:16px;color:#333;margin-bottom:8px}
+        /* 侧边对话用户样式 */
+        .chat-list a{display:block;padding:8px 16px;color:#fff;text-decoration:none;}
+        .chat-list a:hover{background:#2b3b4a;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <h2>管理菜单</h2>
+            <div class="menu-group">
+                <a href="{% url 'dashboard' %}"><span class="icon">🏠</span>首页</a>
+                <a href="{% url 'category_view' '家具' %}"><span class="icon">🪑</span>家具</a>
+                <a href="{% url 'category_view' '家电' %}"><span class="icon">🔌</span>家电</a>
+                <a href="{% url 'category_view' '食品' %}"><span class="icon">📺</span>食品</a>
+                <a href="{% url 'category_view' '未分类' %}"><span class="icon">❓</span>未分类</a>
+                <a href="{% url 'dashboard_stats' %}" class="active"><span class="icon">📊</span>数据统计</a>
+            </div>
+
+            <div class="menu-group">
+                <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
+            </div>
+
+            {% if request.user.is_superuser %}
+            <div class="menu-group">
+                <h3 style="color:#bbb;padding:8px 16px;margin:0;font-size:14px;">对话用户</h3>
+                <div class="chat-list" style="padding:8px 0;">
+                    {% for u in chat_users %}
+                        <a href="#" class="chat-user-link" data-username="{{ u.username }}" data-id="{{ u.id }}">💬 {{ u.username }}</a>
+                    {% empty %}
+                        <div style="color:#bbb;padding:8px 16px;">暂无对话用户</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </nav>
+
+        <main class="main">
+            <div class="wrap">
+                <h1>数据统计</h1>
+                <p style="color:#666;margin-top:6px;">饼图按 "{{ pie_field }}" 统计百分比；条形图按分类统计数量。</p>
+
+                <div class="row">
+                    <div class="card">
+                        <div class="title">类型占比（饼图）</div>
+                        <canvas id="pieChart" width="400" height="300"></canvas>
+                    </div>
+                    <div class="card">
+                        <div class="title">分类数量（条形图）</div>
+                        <canvas id="barChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+(function(){
+    // 从后端 context 注入的 JSON 字符串，使用 escapejs + JSON.parse 安全解析
+    const pieLabels = JSON.parse('{{ pie_labels|escapejs }}');
+    const pieData = JSON.parse('{{ pie_data|escapejs }}');
+    const barLabels = JSON.parse('{{ bar_labels|escapejs }}');
+    const barData = JSON.parse('{{ bar_data|escapejs }}');
+
+    function genColors(n){
+        const base = ['#3a7bd5','#00d2ff','#ff7a18','#ffd200','#7bff6f','#ff6fbf','#b28cff','#6fd6ff','#ff9e6f','#9fe37b'];
+        const res=[];
+        for(let i=0;i<n;i++) res.push(base[i%base.length]);
+        return res;
+    }
+
+    // 通过 Django 生成包含占位符的 category 页面 URL（占位符：___CATEGORY___）
+    // 例： "{% url 'category_view' '___CATEGORY___' %}" -> "/category/___CATEGORY___/"
+    var categoryUrlPattern = "{% url 'category_view' '___CATEGORY___' %}";
+
+    // 饼图：点击切片下钻到对应分类页面
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: genColors(pieData.length), borderWidth:0 }] },
+        options: {
+            responsive:true,
+            plugins:{ legend:{position:'bottom'} },
+            onClick: function(evt, activeEls) {
+                if (!activeEls || activeEls.length === 0) return;
+                const idx = activeEls[0].index;
+                const label = pieLabels[idx];
+                if (!label) return;
+                // 把占位符替换为编码后的分类名并跳转
+                const target = categoryUrlPattern.replace('___CATEGORY___', encodeURIComponent(label));
+                window.location.href = target;
+            }
+        }
+    });
+
+    // 条形图
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: { labels: barLabels, datasets: [{ label:'数量', data: barData, backgroundColor: genColors(barData.length) }] },
+        options: { responsive:true, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } }, plugins:{ legend:{ display:false } } }
+    });
+})();
+</script>
+</body>
+</html>

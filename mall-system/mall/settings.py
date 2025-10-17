@@ -83,7 +83,7 @@ DATABASES = {
         'NAME': 'shopping_mall',      # 替换为你的数据库名
         'USER': 'root',      # 替换为你的数据库用户名
         'PASSWORD': 'cs201219.',  # 替换为你的数据库密码
-        'HOST': '8.216.32.82',
+        'HOST': '8.216.38.39',
         'PORT': '3306',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -146,7 +146,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("8.216.32.82", 6379)],  # 这里填写你的 Redis IP 和端口
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }

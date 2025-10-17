@@ -2,12 +2,21 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from .models import User
-from .forms import RegisterForm, LoginForm
+from django.core.paginator import Paginator
+from django.contrib.auth import get_user_model
+from django.db.models import Q, Count
+import json
 from apps.products.views import get_cart_items
 from apps.products.models import Product
-from django.core.paginator import Paginator
-from django.db.models import Q
+from apps.chat.models import Message
+
+User = get_user_model()
+
+# 优先使用 apps.users.forms 中的 LoginForm；若没有则使用 Django 的 AuthenticationForm 作为兼容替代
+try:
+    from .forms import LoginForm
+except Exception:
+    from django.contrib.auth.forms import AuthenticationForm as LoginForm
 
 def user_list(request):
     users = User.objects.all()
@@ -46,24 +55,36 @@ def user_profile(request):
     return render(request, 'users/profile.html', {'user': request.user})
 @login_required
 def dashboard_view(request):
-    # 支持搜索 q 参数（基于 product.name 模糊匹配），并分页（每页10条）
     q = request.GET.get('q', '').strip()
-    products_qs = Product.objects.all()
+    qs = Product.objects.all()
     if q:
-        products_qs = products_qs.filter(name__icontains=q)
-    products_qs = products_qs.order_by('-id')
-
-    paginator = Paginator(products_qs, 5)  # 每页10条
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        qs = qs.filter(name__icontains=q)
+    qs = qs.order_by('-id')
+    paginator = Paginator(qs, 5)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     cart_items, cart_total_count, cart_total_price = get_cart_items(request)
+
+    # 管理员目标（取第一个 superuser）
+    admin = User.objects.filter(is_superuser=True).first()
+    admin_username = admin.username if admin else ''
+    admin_id = admin.id if admin else None
+
+    # 管理员侧边栏显示与其有对话的用户
+    chat_users = []
+    if request.user.is_superuser:
+        user_ids = Message.objects.exclude(sender=None).values_list('sender__id', flat=True).distinct()
+        chat_users = User.objects.filter(id__in=user_ids)
+
     context = {
         'products': page_obj,
         'cart_items': cart_items,
         'cart_total_count': cart_total_count,
         'cart_total_price': cart_total_price,
-        'q': q,  # 将搜索词传到模板，便于表单回显与分页链接保留
+        'q': q,
+        'admin_username': admin_username,
+        'admin_id': admin_id,            # 新增：管理员 id
+        'chat_users': chat_users,
     }
     return render(request, 'users/dashboard.html', context)
 @login_required
@@ -93,3 +114,33 @@ def category_view(request, category):
         'q': q,  # 将搜索词传回模板以便回显和分页保留
     }
     return render(request, 'users/category.html', context)
+@login_required
+def dashboard_stats(request):
+    # 仅管理员可见
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+
+    # 饼图按 Product.type（若不存在则回退到 category）
+    field_for_pie = 'type'
+    try:
+        Product._meta.get_field('type')
+    except Exception:
+        field_for_pie = 'category'
+
+    pie_qs = Product.objects.values(field_for_pie).annotate(count=Count(field_for_pie)).order_by('-count')
+    pie_labels = [(item[field_for_pie] if item[field_for_pie] else '未设置') for item in pie_qs]
+    pie_data = [item['count'] for item in pie_qs]
+
+    # 条形图按 category 统计每类数量
+    bar_qs = Product.objects.values('category').annotate(count=Count('category')).order_by('-count')
+    bar_labels = [(item['category'] if item['category'] else '未分类') for item in bar_qs]
+    bar_data = [item['count'] for item in bar_qs]
+
+    context = {
+        'pie_labels': json.dumps(pie_labels, ensure_ascii=False),
+        'pie_data': json.dumps(pie_data),
+        'pie_field': field_for_pie,
+        'bar_labels': json.dumps(bar_labels, ensure_ascii=False),
+        'bar_data': json.dumps(bar_data),
+    }
+    return render(request, 'users/stats.html', context)

@@ -19,7 +19,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
 # ----------------- 配置 -----------------
-CHROME_DRIVER = r"D:\Tools\chromedriver\chromedriver.exe"   # ← 修改为你的 chromedriver 路径
+CHROME_DRIVER = r"D:\Tools\chromedriver\chromedriver.exe"   # 指定chromedriver 路径
 CATEGORIES = {
     "食品": ("https://category.dangdang.com/cid4002145.html", 20),
     "家电": ("https://category.dangdang.com/cid4001001.html", 20),

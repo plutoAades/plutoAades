@@ -14,7 +14,7 @@ urlpatterns = [
     path('products/', include('apps.products.urls')),
     path('orders/', include('apps.orders.urls')),
     path('users/', include('apps.users.urls')),
-    path('chat/', include('apps.chat.urls')),
+    path('chat/', include('apps.chat.urls')),  # <-- 确保添加这一行
     path('', home_redirect, name='home'),
     path('api/products/', include('apps.products.api.urls')),
     path('api/orders/', include('apps.orders.api.urls')),

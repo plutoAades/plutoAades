@@ -1,7 +1,109 @@
-<h2>订单详情</h2>
-<p>订单ID: {{ order.id }}</p>
-<p>用户: {{ order.user.username }}</p>
-<p>商品: {{ order.product.name }}</p>
-<p>数量: {{ order.quantity }}</p>
-<p>状态: {{ order.status }}</p>
-<p>下单时间: {{
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单详情 #{{ order.id }}</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Segoe UI",Arial,sans-serif; background:#f4f4f4; }
+        .container { display:flex; min-height:100vh; }
+        .sidebar { width:220px; background:#232e3c; color:#fff; padding-top:30px; flex-shrink:0; box-shadow:2px 0 8px rgba(0,0,0,0.04); }
+        .sidebar h2 { text-align:center; font-size:20px; margin-bottom:30px; font-weight:600; }
+        .menu-group { margin-bottom:24px; }
+        .sidebar a { display:flex; align-items:center; color:#fff; text-decoration:none; padding:12px 28px; margin-bottom:6px; border-radius:6px; font-size:16px; }
+        .sidebar a.active, .sidebar a:hover { background:#007bff; }
+        .icon { margin-right:12px; font-size:18px; }
+        .main { flex:1; padding:40px 32px; background:#fff; }
+        .card { background:#fff; border-radius:8px; padding:18px; box-shadow:0 8px 32px rgba(0,0,0,0.04); max-width:1100px; margin:0 auto; }
+        .row{display:flex;gap:18px;flex-wrap:wrap}
+        .box{flex:1;min-width:220px;padding:12px;border-radius:8px;background:#fbfdff;border:1px solid #eef6ff;}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{padding:10px;border-bottom:1px solid #eef5ff;text-align:left}
+        .btn{background:linear-gradient(90deg,#3a7bd5,#00d2ff);color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;display:inline-block}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <h2>管理菜单</h2>
+            <div class="menu-group">
+                <a href="{% url 'profile' %}"><span class="icon">👤</span>个人资料</a>
+                <a href="{% url 'dashboard' %}"><span class="icon">🏠</span>商品列表</a>
+                <a href="{% url 'order_list' %}"><span class="icon">📦</span>我的订单</a>
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'dashboard_stats' %}"><span class="icon">📊</span>数据统计</a>
+                {% endif %}
+            </div>
+            <div class="menu-group">
+                <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
+            </div>
+        </nav>
+
+        <main class="main">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <h1 style="margin:0 0 6px 0;">订单详情</h1>
+                        <div style="color:#666;">订单编号：#{{ order.id }} &nbsp; 下单时间：{% if order.created_at %}{{ order.created_at|date:"Y-m-d H:i" }}{% endif %}</div>
+                    </div>
+                    <div>
+                        <a class="btn" href="{% url 'order_list' %}">返回列表</a>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:16px;">
+                    <div class="box">
+                        <strong>用户信息</strong>
+                        <div style="margin-top:8px;">用户名：{{ order.user.username }}</div>
+                        {% if order.user.email %}<div>邮箱：{{ order.user.email }}</div>{% endif %}
+                    </div>
+                    <div class="box">
+                        <strong>订单状态</strong>
+                        <div style="margin-top:8px;">状态：{{ order.status }}</div>
+                        <div style="margin-top:8px;">总价：￥{{ order.total_price|floatformat:2 }}</div>
+                    </div>
+                    <div class="box">
+                        <strong>收货/联系方式</strong>
+                        {% if order.address %}<div style="margin-top:8px;">地址：{{ order.address }}</div>{% endif %}
+                        {% if order.phone %}<div>电话：{{ order.phone }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <h3 style="margin-top:18px;">商品明细</h3>
+                <table>
+                    <thead>
+                        <tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr>
+                    </thead>
+                    <tbody>
+                        {# 支持两种模型结构：order.items 或 order.product 单一商品 #}
+                        {% if order.items.exists %}
+                            {% for item in order.items.all %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>￥{{ item.price|floatformat:2 }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>￥{{ item.line_total|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td>{{ order.product.name }}</td>
+                                <td>￥{{ order.product.price|floatformat:2 }}</td>
+                                <td>{{ order.quantity|default:1 }}</td>
+                                <td>￥{{ order.total_price|floatformat:2 }}</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                {% if order.note %}
+                    <div style="margin-top:12px;padding:12px;background:#fbfbff;border-radius:6px;border:1px solid #eef6ff;">
+                        <strong>买家备注：</strong>
+                        <div style="margin-top:6px;color:#444;">{{ order.note|linebreaksbr }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

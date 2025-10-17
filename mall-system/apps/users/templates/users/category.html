@@ -62,13 +62,16 @@
 <body>
     <div class="container">
         <nav class="sidebar">
-            <h2>管理菜单</h2>
+            <h2>商城平台</h2>
             <div class="menu-group">
                 <a href="{% url 'dashboard' %}"><span class="icon">🏠</span>首页</a>
                 <a href="{% url 'category_view' '家具' %}"><span class="icon">🪑</span>家具</a>
                 <a href="{% url 'category_view' '家电' %}"><span class="icon">🔌</span>家电</a>
                 <a href="{% url 'category_view' '食品' %}"><span class="icon">📺</span>食品</a>
                 <a href="{% url 'category_view' '未分类' %}"><span class="icon">❓</span>未分类</a>
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'dashboard_stats' %}"><span class="icon">📊</span>数据统计</a>
+                {% endif %}
             </div>
             <div class="menu-group">
                 <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
@@ -83,7 +86,7 @@
                         <form method="get" action="{% url 'category_view' category %}" class="search-bar" role="search">
                             <input type="text" name="q" value="{{ q|default:'' }}" placeholder="搜索本分类商品名称（支持模糊）" aria-label="搜索商品">
                             <button type="submit">搜索</button>
-                            <button type="button" id="search-reset" class="reset-btn">重置</button>
+                            <button type="button" id="search-reset" class="search-reset" data-target="{% url 'category_view' category %}">重置</button>
                         </form>
 
                         <!-- 聊天室按钮：置于搜索框下方 -->
@@ -200,12 +203,7 @@
         if (cartPopup) cartPopup.addEventListener('click', function(e) { e.stopPropagation(); });
 
         // 重置按钮逻辑：跳回当前分类页（清除 q 和 page）
-        var resetBtn = document.getElementById('search-reset');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                window.location.href = "{% url 'category_view' category %}";
-            });
-        }
+        // 通用重置处理见底部通用脚本
     });
     </script>
 </body>

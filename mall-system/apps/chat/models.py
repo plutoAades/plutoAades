@@ -30,15 +30,27 @@ class Message(models.Model):
         return f'{self.sender.username}: {self.content[:20]}'
 
 class PrivateMessage(models.Model):
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='private_sent')
-    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='private_received')
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='sent_private_messages',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='received_private_messages',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
     content = models.TextField(blank=True)
-    file = models.FileField(upload_to='chat_files/', null=True, blank=True)
-    message_type = models.CharField(max_length=10, default='text')  # text/image/file
+    file = models.FileField(upload_to='chat_files/', null=True, blank=True)  # <- 必须的列
+    message_type = models.CharField(max_length=32, default='text')
     timestamp = models.DateTimeField(auto_now_add=True)
-    is_deleted = models.BooleanField(default=False)
-    is_revoked = models.BooleanField(default=False)
-    forwarded_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='forwarded_messages')
+
+    class Meta:
+        ordering = ['timestamp']
 
     def __str__(self):
-        return f'{self.sender.username} -> {self.receiver.username}: {self.content[:20]}'
+        return f'{self.sender} -> {self.receiver}: {self.content[:30]}'

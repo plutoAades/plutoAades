@@ -1,6 +1,94 @@
-<h2>订单列表</h2>
-<ul>
-    {% for order in orders %}
-        <li>订单ID: {{ order.id }}，用户: {{ order.user.username }}，商品: {{ order.product.name }}，数量: {{ order.quantity }}，状态: {{ order.status }}</li>
-    {% endfor %}
-</ul>
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Segoe UI",Arial,sans-serif; background:#f4f4f4; }
+        .container { display:flex; min-height:100vh; }
+        .sidebar { width:220px; background:#232e3c; color:#fff; padding-top:30px; flex-shrink:0; box-shadow:2px 0 8px rgba(0,0,0,0.04); }
+        .sidebar h2 { text-align:center; font-size:20px; margin-bottom:30px; font-weight:600; letter-spacing:2px; }
+        .menu-group { margin-bottom:24px; }
+        .sidebar a { display:flex; align-items:center; color:#fff; text-decoration:none; padding:12px 28px; margin-bottom:6px; border-radius:6px; font-size:16px; transition:background .15s; }
+        .sidebar a.active, .sidebar a:hover { background:#007bff; }
+        .icon { margin-right:12px; font-size:18px; }
+        .main { flex:1; padding:40px 32px; background:#fff; }
+        .card { background:#fff; border-radius:8px; padding:18px; box-shadow:0 8px 32px rgba(0,0,0,0.04); max-width:1100px; margin:0 auto; }
+        .order-list { width:100%; border-collapse:collapse; margin-top:12px; }
+        .order-list th, .order-list td { padding:12px 10px; border-bottom:1px solid #eef5ff; text-align:left; }
+        .order-list th { background:#fbfdff; color:#333; font-weight:600; }
+        .empty { text-align:center; color:#777; padding:24px 0; }
+        .btn { background:linear-gradient(90deg,#3a7bd5,#00d2ff); color:#fff; border:none; padding:8px 12px; border-radius:6px; text-decoration:none; }
+        @media (max-width:700px){
+            .container{flex-direction:column;}
+            .sidebar{width:100%;padding:10px 0;}
+            .main{padding:16px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <h2>管理菜单</h2>
+            <div class="menu-group">
+                <a href="{% url 'profile' %}"><span class="icon">👤</span>个人资料</a>
+                <a href="{% url 'dashboard' %}"><span class="icon">🏠</span>商品列表</a>
+                <a href="{% url 'order_list' %}" class="active"><span class="icon">📦</span>我的订单</a>
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'dashboard_stats' %}"><span class="icon">📊</span>数据统计</a>
+                {% endif %}
+            </div>
+            <div class="menu-group">
+                <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
+            </div>
+        </nav>
+
+        <main class="main">
+            <div class="card">
+                <h1 style="margin:0 0 8px 0;">订单列表</h1>
+                <p style="color:#666;margin:0 0 12px 0;">显示最近的订单。点击订单号可查看详情（如有）。</p>
+
+                {% if orders %}
+                    <table class="order-list">
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>用户</th>
+                                <th>商品</th>
+                                <th>数量</th>
+                                <th>总价</th>
+                                <th>状态</th>
+                                <th>下单时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.user.username }}</td>
+                                    <td>{{ order.product.name }}</td>
+                                    <td>{{ order.quantity }}</td>
+                                    <td>￥{{ order.total_price|default:order.product.price|floatformat:2 }}</td>
+                                    <td>{{ order.status }}</td>
+                                    <td>{% if order.created_at %}{{ order.created_at|date:"Y-m-d H:i" }}{% endif %}</td>
+                                    <td>
+                                        {% if order.get_absolute_url %}
+                                            <a class="btn" href="{{ order.get_absolute_url }}">详情</a>
+                                        {% else %}
+                                            <a class="btn" href="{% url 'order_detail' order.id %}">详情</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty">暂无订单记录</div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

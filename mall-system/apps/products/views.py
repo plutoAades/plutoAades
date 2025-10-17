@@ -1,30 +1,49 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.views.generic import ListView, DetailView
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.db.models import Prefetch
 from .models import Product, ProductImage
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from decimal import Decimal
 
 
 # =======================
 # 辅助函数：获取购物车信息
 # =======================
 def get_cart_items(request):
-    cart = request.session.get('cart', {})
-    cart_items = []
+    """
+    返回 (cart_items, total_count, total_price)
+    cart 存在于 session，格式: { "<product_id>": <quantity>, ... }
+    cart_items 列表中每项为 dict: {'product': Product, 'quantity': int, 'line_total': Decimal}
+    """
+    cart = request.session.get('cart', {}) or {}
+    items = []
     total_count = 0
-    total_price = 0
-    product_ids = [int(pid) for pid in cart.keys()]
-    products = Product.objects.filter(id__in=product_ids)
-    product_map = {product.id: product for product in products}
-    for pid, qty in cart.items():
-        product = product_map.get(int(pid))
-        if product:
-            cart_items.append({'product': product, 'quantity': qty})
-            total_count += qty
-            total_price += product.price * qty
-    return cart_items, total_count, total_price
+    total_price = Decimal('0.00')
+    for pid, qty in list(cart.items()):
+        try:
+            product = Product.objects.get(pk=pid)
+        except Product.DoesNotExist:
+            # 清理已不存在的商品
+            cart.pop(pid, None)
+            continue
+        try:
+            qty_i = int(qty)
+        except Exception:
+            qty_i = 0
+        if qty_i <= 0:
+            cart.pop(pid, None)
+            continue
+        line_total = (product.price or Decimal('0.00')) * qty_i
+        items.append({'product': product, 'quantity': qty_i, 'line_total': line_total})
+        total_count += qty_i
+        total_price += line_total
+    # 把可能的清理回写 session
+    request.session['cart'] = cart
+    return items, total_count, total_price
 
 
 # =======================
@@ -112,25 +131,58 @@ def product_delete(request, product_id):
 # 购物车操作
 # =======================
 def add_to_cart(request, product_id):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
-    cart = request.session.get('cart', {})
-    cart[str(product_id)] = cart.get(str(product_id), 0) + 1
+    """
+    将商品加入 session 购物车，默认数量 +1（可改为表单量）
+    """
+    product = get_object_or_404(Product, id=product_id)
+    cart = request.session.get('cart', {}) or {}
+    pid = str(product.id)
+    qty = int(request.POST.get('quantity', 1)) if request.method == 'POST' else 1
+    cart[pid] = int(cart.get(pid, 0)) + max(1, qty)
     request.session['cart'] = cart
-    # 跳转回来源页面
-    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+    # 如果调用处希望跳回商品详情，可用 HTTP_REFERER 或 product 列表
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return HttpResponseRedirect(referer)
+    return redirect('product_list')
 
 
 def remove_from_cart(request, product_id):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
-    cart = request.session.get('cart', {})
-    if str(product_id) in cart:
-        cart[str(product_id)] -= 1
-        if cart[str(product_id)] <= 0:
-            del cart[str(product_id)]
+    """
+    从购物车减少 1 或移除（POST 可传 quantity）
+    """
+    cart = request.session.get('cart', {}) or {}
+    pid = str(product_id)
+    if pid in cart:
+        try:
+            dec = int(request.POST.get('quantity', 1)) if request.method == 'POST' else 1
+        except Exception:
+            dec = 1
+        cart[pid] = cart.get(pid, 0) - dec
+        if cart[pid] <= 0:
+            cart.pop(pid, None)
         request.session['cart'] = cart
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return HttpResponseRedirect(referer)
+    return redirect('product_list')
 
-    return redirect(request.META.get('HTTP_REFERER', 'product_list'))
+
+@login_required
+@require_POST
+def add_review(request, product_id):
+    """
+    提交商品评论（登录用户）。表单字段：rating, content
+    提交后重定向回 product_detail 页面。
+    """
+    product = get_object_or_404(Product, id=product_id)
+    try:
+        rating = int(request.POST.get('rating', 5))
+    except Exception:
+        rating = 5
+    rating = max(1, min(5, rating))
+    content = (request.POST.get('content') or '').strip()
+    # 创建评论
+    from .models import ProductReview
+    ProductReview.objects.create(product=product, user=request.user, rating=rating, content=content)
+    return redirect('product_detail', pk=product.id)

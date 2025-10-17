@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
@@ -26,6 +27,20 @@ class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)  # 迁移后改回
+
+# 新增：商品评论
+class ProductReview(models.Model):
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='product_reviews', on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(default=5)  # 1-5
+    content = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Review({self.product_id}) by {self.user_id}'
 
 class ProductListView(ListView):
     model = Product

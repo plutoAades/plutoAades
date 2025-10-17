@@ -68,12 +68,12 @@
 <body>
     <div class="container">
         <nav class="sidebar">
-            <h2>管理菜单</h2>
+            <h2>账号中心</h2>
             <div class="menu-group">
                 <a href="{% url 'profile' %}" class="active"><span class="icon">👤</span>个人资料</a>
-                <a href="{% url 'product_list' %}"><span class="icon">🛒</span>商品列表</a>
+                <a href="{% url 'dashboard' %}"><span class="icon">🛒</span>商品列表</a>
                 <a href="{% url 'order_list' %}"><span class="icon">📦</span>我的订单</a>
-                <a href="{% url 'chat_room_list' %}"><span class="icon">💬</span>聊天室</a>
+                {# <a href="{% url 'chat_room_list' %}"><span class="icon">💬</span>聊天室</a> #}
             </div>
             <div class="menu-group">
                 <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>

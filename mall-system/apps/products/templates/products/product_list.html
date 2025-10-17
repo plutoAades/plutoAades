@@ -5,254 +5,138 @@
     <title>商品列表</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .product-list-container {
-            background: #fff;
-            max-width: 720px;
-            margin: 60px auto;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(60, 120, 200, 0.15);
-        }
-        .header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-        .user-info-bar {
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-        .user-dropdown {
-            position: relative;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .user-dropdown-btn {
-            background: none;
-            border: none;
-            color: #3a7bd5;
-            font-size: 15px;
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-        .user-dropdown-btn:hover {
-            background: #e3eafc;
-        }
-        .user-dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 36px;
-            background: #fff;
-            min-width: 180px;
-            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
-            border-radius: 8px;
-            z-index: 100;
-            padding: 12px 0;
-        }
-        .user-dropdown:hover .user-dropdown-content {
-            display: block;
-        }
-        .user-dropdown-content span, .user-dropdown-content a {
-            display: block;
-            padding: 8px 20px;
-            color: #3a7bd5;
-            text-decoration: none;
-        }
-        .user-dropdown-content a.logout-link { color: #e53935; }
-
-        .cart-count {
-            background: #3a7bd5;
-            color: #fff;
-            border-radius: 10px;
-            padding: 2px 8px;
-            font-size: 13px;
-            margin-left: 8px;
-            cursor: pointer;
-        }
-        .cart-popup {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 36px;
-            background: #fff;
-            min-width: 260px;
-            box-shadow: 0 4px 16px rgba(60,120,200,0.13);
-            border-radius: 8px;
-            z-index: 200;
-            padding: 16px 12px 12px 12px;
-        }
-        .cart-popup ul { list-style: none; padding: 0; margin: 0; }
-        .cart-popup li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 15px;
-        }
-        .cart-action-btn {
-            background: #3a7bd5;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 2px 8px;
-            margin-left: 4px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #3a7bd5;
-            margin: 20px 0;
-        }
-
-        .product-list { list-style: none; padding: 0; margin: 0; }
-        .product-item {
-            display: flex;
-            align-items: center;
-            background: #f7fbff;
-            border-radius: 8px;
-            margin-bottom: 18px;
-            padding: 16px 18px;
-            box-shadow: 0 2px 8px rgba(60,120,200,0.06);
-        }
-        .product-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-right: 24px;
-            border: 1px solid #e3eafc;
-            background: #e3eafc;
-        }
-        .product-info { flex: 1; }
-        .product-name {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 6px;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        .product-name:hover { color: #3a7bd5; }
-        .product-price {
-            font-size: 16px;
-            color: #3a7bd5;
-            font-weight: bold;
-        }
-        .add-cart-btn {
-            background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 18px;
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-        .pagination {
-            text-align: center;
-            margin-top: 25px;
-        }
-        .pagination a, .pagination strong {
-            margin: 0 5px;
-            text-decoration: none;
-            color: #3a7bd5;
-        }
-        .pagination strong {
-            font-weight: bold;
-            color: #1e5acc;
-        }
-        .empty-message {
-            text-align: center;
-            color: #888;
-            margin-top: 20px;
-        }
+        /* 与 dashboard 统一的布局样式（简化） */
+        body { margin:0; font-family:"Segoe UI", Arial, sans-serif; background:#f4f4f4; }
+        .container { display:flex; min-height:100vh; }
+        .sidebar { width:220px; background:#232e3c; color:#fff; padding-top:30px; flex-shrink:0; box-shadow:2px 0 8px rgba(0,0,0,0.04); }
+        .sidebar h2 { text-align:center; font-size:20px; margin-bottom:30px; font-weight:600; letter-spacing:2px; }
+        .menu-group { margin-bottom:24px; }
+        .sidebar a { display:flex; align-items:center; color:#fff; text-decoration:none; padding:12px 20px; margin-bottom:6px; border-radius:6px; font-size:16px; }
+        .sidebar a:hover, .sidebar a.active { background:#007bff; }
+        .icon{ margin-right:10px; }
+        .main { flex:1; padding:40px 32px; background:#fff; }
+        .product-list-container { background:#fff; max-width:900px; margin:0 auto; padding:30px; border-radius:12px; box-shadow:0 8px 32px rgba(60,120,200,0.08); }
+        .product-list { list-style:none; padding:0; margin:0; }
+        .product-item { display:flex; align-items:center; background:#f7fbff; border-radius:8px; margin-bottom:16px; padding:14px; box-shadow:0 2px 6px rgba(60,120,200,0.04); }
+        .product-img { width:80px; height:80px; object-fit:cover; border-radius:8px; margin-right:20px; background:#e3eafc; border:1px solid #e3eafc; }
+        .product-name { font-size:18px; color:#333; font-weight:600; text-decoration:none; }
+        .product-price { color:#3a7bd5; font-weight:700; margin-left:8px; }
+        .add-cart-btn { background:linear-gradient(90deg,#3a7bd5 0%,#00d2ff 100%); color:#fff; border:none; border-radius:6px; padding:8px 14px; cursor:pointer; }
+        .search-bar { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+        .search-bar input[type="text"] { padding:8px 12px; border-radius:6px; border:1px solid #ccc; min-width:260px; }
+        .chat-btn { margin-top:8px; padding:8px 12px; border-radius:6px; border:none; background:#3a7bd5; color:#fff; text-decoration:none; display:inline-block; }
+        .pagination { text-align:center; margin-top:18px; }
     </style>
 </head>
 <body>
-<div class="product-list-container">
-
-    <!-- 优化：导航栏抽取为独立模板 -->
-    {% include "products/products_navbar.html" %}
-
-    <!-- 商品列表 -->
-    <h2>商品列表</h2>
-    {% if products %}
-        <ul class="product-list">
-            {% for product in products %}
-                <li class="product-item">
-                    {% if product.image_main %}
-                        <img class="product-img" src="{{ product.image_main.url }}" alt="{{ product.name }}">
-                    {% else %}
-                        <img class="product-img" src="https://via.placeholder.com/80x80?text=暂无图片" alt="暂无图片">
-                    {% endif %}
-                    <div class="product-info">
-                        <a class="product-name" href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
-                        <span class="product-price">￥{{ product.price }}</span>
-                    </div>
-                    <form method="post" action="{% url 'add_to_cart' product.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="add-cart-btn">加入购物车</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="empty-message">暂无商品数据</div>
-    {% endif %}
-
-    <!-- 分页 -->
-    <div class="pagination">
-        {% if products.has_previous %}
-            <a href="?page=1">首页</a>
-            <a href="?page={{ products.previous_page_number }}">上一页</a>
-        {% endif %}
-
-        {% for num in products.paginator.page_range %}
-            {% if num == products.number %}
-                <strong>{{ num }}</strong>
-            {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
-                <a href="?page={{ num }}">{{ num }}</a>
+<div class="container">
+    <nav class="sidebar">
+        <h2>商城平台</h2>
+        <div class="menu-group">
+            <a href="{% url 'dashboard' %}" class="active"><span class="icon">🏠</span>首页</a>
+            <a href="{% url 'category_view' '家具' %}"><span class="icon">🪑</span>家具</a>
+            <a href="{% url 'category_view' '家电' %}"><span class="icon">🔌</span>家电</a>
+            <a href="{% url 'category_view' '食品' %}"><span class="icon">📺</span>食品</a>
+            <a href="{% url 'category_view' '未分类' %}"><span class="icon">❓</span>未分类</a>
+            {% if request.user.is_superuser %}
+                <a href="{% url 'dashboard_stats' %}"><span class="icon">📊</span>数据统计</a>
             {% endif %}
-        {% endfor %}
+        </div>
+        <div class="menu-group">
+            <a href="{% url 'logout' %}"><span class="icon">🚪</span>退出登录</a>
+        </div>
+    </nav>
 
-        {% if products.has_next %}
-            <a href="?page={{ products.next_page_number }}">下一页</a>
-            <a href="?page={{ products.paginator.num_pages }}">末页</a>
-        {% endif %}
+    <div class="main">
+        <div class="product-list-container">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                <form method="get" action="{% url 'product_list' %}" class="search-bar">
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="搜索商品名称">
+                    <button type="submit">搜索</button>
+                    <button type="button" class="search-reset" data-target="{% url 'product_list' %}">重置</button>
+                </form>
+                <div>
+                    <a class="chat-btn" href="/chat/room/{{ request.user.username }}/" data-admin="{{ admin_username|default:'' }}" data-label="管理员">聊天室</a>
+                </div>
+            </div>
 
-        <!-- 当前页/总页数 -->
-        <span style="margin-left:12px;color:#555;">
-            当前第 {{ products.number }} 页 / 共 {{ products.paginator.num_pages }} 页
-        </span>
+            <h2>商品列表</h2>
+            {% if products %}
+            <ul class="product-list">
+                {% for product in products %}
+                    <li class="product-item">
+                        {% if product.image_main %}
+                            <img class="product-img" src="{{ product.image_main.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <img class="product-img" src="https://via.placeholder.com/80x80?text=暂无" alt="暂无图片">
+                        {% endif %}
+                        <div style="flex:1;">
+                            <a class="product-name" href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+                            <div style="margin-top:6px;">
+                                <span class="product-price">￥{{ product.price }}</span>
+                                <span style="margin-left:12px;color:#777;">库存：{{ product.stock }}</span>
+                            </div>
+                        </div>
+                        <form method="post" action="{% url 'add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="add-cart-btn">加入购物车</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="pagination">
+                {% if products.has_previous %}
+                    <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">首页</a>
+                    <a href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">上一页</a>
+                {% endif %}
+                {% for num in products.paginator.page_range %}
+                    {% if num == products.number %}
+                        <strong>{{ num }}</strong>
+                    {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" %}
+                        <a href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">下一页</a>
+                {% endif %}
+            </div>
+            {% else %}
+                <div style="text-align:center;color:#888;padding:40px 0;">暂无商品数据</div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
+<!-- 简单聊天 openChat 占位脚本（若你已有聊天脚本可删除） -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var cartBtn = document.getElementById('cart-count-btn');
-    var cartPopup = document.getElementById('cart-popup');
-    if (cartBtn && cartPopup) {
-        cartBtn.addEventListener('click', function(e) {
-            cartPopup.style.display = (cartPopup.style.display === 'block') ? 'none' : 'block';
-            e.stopPropagation();
+function openChat(admin, label){
+    if (!admin) { alert('管理员未配置'); return; }
+    // 触发页面内聊天弹窗逻辑（dashboard 模板内脚本会处理）
+    var ev = new CustomEvent('openChatFromOther', { detail:{ username: admin, label: label } });
+    window.dispatchEvent(ev);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.chat-btn').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.preventDefault();
+            var admin = btn.getAttribute('data-admin') || '';
+            var label = btn.getAttribute('data-label') || '管理员';
+            openChat(admin, label);
         });
-        document.addEventListener('click', function() { cartPopup.style.display = 'none'; });
-        cartPopup.addEventListener('click', function(e) { e.stopPropagation(); });
-    }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.search-reset').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var target = btn.getAttribute('data-target') || (btn.form && btn.form.action) || window.location.pathname;
+            // 保证为完整 URL（模板中一般传入完整 path）
+            window.location.href = target;
+        });
+    });
 });
 </script>
-
 </body>
 </html>
