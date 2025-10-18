@@ -19,11 +19,40 @@
         .order-list th, .order-list td { padding:12px 10px; border-bottom:1px solid #eef5ff; text-align:left; }
         .order-list th { background:#fbfdff; color:#333; font-weight:600; }
         .empty { text-align:center; color:#777; padding:24px 0; }
-        .btn { background:linear-gradient(90deg,#3a7bd5,#00d2ff); color:#fff; border:none; padding:8px 12px; border-radius:6px; text-decoration:none; }
+
+        /* 自适应的详情按钮样式（已替换，自动适配宽度与小屏全宽） */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(90deg,#3a7bd5,#00d2ff);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            min-width: 72px;
+            box-sizing: border-box;
+            transition: transform .08s ease, filter .12s ease;
+        }
+        .btn:hover { transform: translateY(-2px); filter: brightness(.98); }
+        .btn:active { transform: translateY(0); }
+
+        /* 小屏时按钮改为块级并占满可用宽度以提升触控体验 */
         @media (max-width:700px){
-            .container{flex-direction:column;}
-            .sidebar{width:100%;padding:10px 0;}
-            .main{padding:16px;}
+            .btn {
+                display:block;
+                width:100%;
+                padding:10px 12px;
+                text-align:center;
+                border-radius:8px;
+                min-width: auto;
+                margin-top:6px;
+            }
+            .order-list th, .order-list td { padding:10px 6px; }
         }
     </style>
 </head>
@@ -73,12 +102,17 @@
                                     <td>￥{{ order.total_price|default:order.product.price|floatformat:2 }}</td>
                                     <td>{{ order.status }}</td>
                                     <td>{% if order.created_at %}{{ order.created_at|date:"Y-m-d H:i" }}{% endif %}</td>
-                                    <td>
+                                    <td style="display:flex;gap:8px;align-items:center;">
                                         {% if order.get_absolute_url %}
                                             <a class="btn" href="{{ order.get_absolute_url }}">详情</a>
                                         {% else %}
                                             <a class="btn" href="{% url 'order_detail' order.id %}">详情</a>
                                         {% endif %}
+
+                                        <form method="post" action="{% url 'delete_order' order.id %}" class="inline-delete-form" style="margin:0;">
+                                             {% csrf_token %}
+                                             <button type="submit" class="btn" style="background:linear-gradient(90deg,#ff5f6d,#ff8a80);">取消</button>
+                                         </form>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -90,5 +124,44 @@
             </div>
         </main>
     </div>
+    <script>
+(function(){
+    function getCookie(name){
+        var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return m ? m.pop() : '';
+    }
+
+    document.querySelectorAll('.inline-delete-form').forEach(function(form){
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (!confirm('确定要取消此订单吗？')) return;
+            var url = form.action;
+            var tr = form.closest('tr');
+            fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                }
+            }).then(function(resp){
+                if (resp.ok){
+                    if (tr) tr.remove();
+                    // 如果表格已空，显示提示
+                    var tbody = document.querySelector('.order-list tbody');
+                    if (tbody && tbody.children.length === 0){
+                        var card = document.querySelector('.card');
+                        if (card) card.innerHTML = '<div class="empty">暂无订单记录</div>';
+                    }
+                } else {
+                    resp.json().then(function(data){
+                        alert(data.error || '删除失败');
+                    }).catch(function(){ alert('删除失败'); });
+                }
+            }).catch(function(){ alert('网络错误，删除失败'); });
+        });
+    });
+})();
+</script>
 </body>
 </html>

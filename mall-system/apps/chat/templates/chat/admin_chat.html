@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Chat Room</title>
+</head>
+<body>
+    <h1>Admin Chat Room: {{ room_name }}</h1>
+
+    <!-- 左侧栏的消息提醒 -->
+    <div id="admin-chat-notification" style="display: none;">
+        <button onclick="enterChatRoom('{{ room_name }}')">You have a new message</button>
+    </div>
+
+    <div id="messages">
+        <!-- 消息内容显示在这里 -->
+    </div>
+
+    <textarea id="message-input" placeholder="Type your message..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        // WebSocket 连接
+        const roomName = "{{ room_name }}";  // 获取房间名
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/chat/private/' + roomName + '/');
+        const adminSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/notifications/');  // 管理员通知 WebSocket
+
+        // 处理来自房间的聊天消息
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = `${data.timestamp} ${data.user}: ${data.message}`;
+            document.getElementById('messages').appendChild(messageDiv);
+        };
+
+        // 处理来自管理员通知的消息
+        adminSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'admin_notification') {
+                // 显示新消息提醒
+                alert("New message from: " + data.message);  // 弹出提示框
+                // 在左侧栏显示一个按钮或通知提醒
+                document.getElementById('admin-chat-notification').style.display = 'block';
+            }
+        };
+
+        // 发送消息
+        function sendMessage() {
+            const content = document.getElementById('message-input').value;
+            socket.send(JSON.stringify({
+                'action': 'send',
+                'content': content,
+            }));
+            document.getElementById('message-input').value = '';
+        }
+
+        // 点击进入聊天房间
+        function enterChatRoom(roomName) {
+            window.location.href = '/chat/' + roomName + '/';  // 跳转到对应聊天房间页面
+        }
+    </script>
+</body>
+</html>

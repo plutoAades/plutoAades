@@ -364,6 +364,72 @@
         #chat-modal .modal-footer button:hover {
             background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
         }
+
+        /* 右上角购物车按钮样式 */
+        #cart-count-btn {
+            background: #3a7bd5;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            position: fixed;
+            right: 18px;
+            top: 14px;
+            z-index: 1000;
+        }
+        #cart-count-btn:hover {
+            background: #2768b8;
+        }
+
+        /* 购物车弹窗样式 */
+        #cart-popup {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: #fff;
+            min-width: 320px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e6eefc;
+            border-radius: 8px;
+            z-index: 200;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        #cart-popup h4 {
+            margin: 0 0 10px 0;
+            color: #3a7bd5;
+            font-size: 16px;
+        }
+        #cart-popup ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 280px;
+            overflow: auto;
+        }
+        #cart-popup li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 6px;
+            border-bottom: 1px solid #f0f6ff;
+            font-size: 15px;
+        }
+        #cart-popup .btn {
+            background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+        #cart-popup .btn:hover {
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        }
     </style>
 </head>
 <body>
@@ -395,6 +461,11 @@
                     <div style="color:#999;padding:8px 20px;">暂无对话用户</div>
                 {% endfor %}
             </div>
+            
+            <!-- 管理员新消息提醒 -->
+            <div id="admin-chat-notification" style="display: none;">
+                <button onclick="enterChatRoom('{{ room_name }}')">You have a new message</button>
+            </div>
             {% endif %}
         </nav>
         <div class="main">
@@ -410,9 +481,9 @@
                         </form>
 
                         <!-- 聊天室按钮：置于搜索框下方 -->
-                        <div>
-                            <a class="chat-btn" href="/chat/room/{{ request.user.username }}/">聊天室</a>
-                        </div>
+                    <div>
+                        <a class="chat-btn" href="{% url 'h5_chat' %}?room_name={{ user.username }}__{{ admin_username }}">聊天室</a>
+                    </div>
                     </div>
                     <!-- 右侧用户信息区（保持不变） -->
                     <div style="margin-left:16px;">
@@ -433,29 +504,33 @@
                             <span class="cart-count" id="cart-count-btn" tabindex="0">购物车：{{ cart_total_count|default:0 }}</span>
                             <div id="cart-popup" class="cart-popup">
                                 <h4>购物车明细</h4>
-                                <ul>
-                                    {% for item in cart_items %}
-                                    <li>
-                                        <span>{{ item.product.name }}</span>
-                                        <span>￥{{ item.product.price }}</span>
-                                        <span>数量：{{ item.quantity }}</span>
-                                        <form method="post" action="{% url 'add_to_cart' item.product.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="cart-action-btn">+</button>
-                                        </form>
-                                        <form method="post" action="{% url 'remove_from_cart' item.product.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="cart-action-btn">-</button>
-                                        </form>
-                                    </li>
-                                    {% empty %}
-                                    <li>购物车为空</li>
-                                    {% endfor %}
-                                </ul>
-                                <div style="margin-top:10px;text-align:right;">
-                                    <strong>总价：￥{{ cart_total_price }}</strong>
-                                </div>
-                            </div>
+                                <form method="post" action="{% url 'create_order' %}">
+                                    {% csrf_token %}
+                                    <ul>
+                                        {% if cart_items %}
+                                            {% for item in cart_items %}
+                                                <li style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                                    <div style="flex:1;">
+                                                        <div style="font-weight:600">{{ item.product.name }}</div>
+                                                        <div style="color:#777;font-size:13px;">单价：￥{{ item.product.price }} × 数量：{{ item.quantity }}</div>
+                                                    </div>
+                                                    <div style="min-width:90px;text-align:right;">
+                                                        小计：￥{{ item.line_total|default:"0.00"|floatformat:2 }}
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        {% else %}
+                                            <li>购物车为空</li>
+                                        {% endif %}
+                                    </ul>
+                                    <div style="margin-top:10px;text-align:right;">
+                                        <strong>总价：￥{{ cart_total_price|default:0|floatformat:2 }}</strong>
+                                    </div>
+                                    <div style="text-align:right;margin-top:8px;">
+                                        <button type="submit" class="btn">提交订单</button>
+                                    </div>
+                                </form>
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -585,7 +660,28 @@ document.addEventListener('DOMContentLoaded', function() {
         ws.onclose = function(){ wsOpen = false; chatSend.disabled = true; console.log('ws closed'); };
     }
 
-    if (chatBtn) chatBtn.addEventListener('click', function(e){ e.preventDefault(); var admin = "{{ admin_username|default:'' }}"; if(!admin){ alert('管理员未配置'); return;} openChat(admin,'管理员'); });
+    if (chatBtn) {
+    chatBtn.addEventListener('click', function(e) {
+        e.preventDefault();  // 阻止默认行为
+
+        var admin = "{{ admin_username|default:'' }}";
+        if (!admin) {
+            alert('管理员未配置');
+            return;
+        }
+
+        // 询问用户是否希望跳转到聊天页面
+        if (confirm("你想跳转到聊天页面吗？")) {
+            var roomName = "{{ user.username }}__" + admin;
+            var url = "{% url 'h5_chat' %}?room_name=" + roomName;
+            window.location.href = url;
+        } else {
+            // 如果选择取消，则弹出聊天窗口
+            openChat(admin, '管理员');
+        }
+    });
+}
+
 
     document.querySelectorAll('.chat-user-link').forEach(function(el){
         el.addEventListener('click', function(e){ e.preventDefault(); openChat(this.dataset.username, this.dataset.username); });
@@ -610,6 +706,47 @@ document.addEventListener('DOMContentLoaded', function(){
             window.location.href = target;
         });
     });
+});
+</script>
+
+<!-- 新增：购物车弹窗切换逻辑 -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var cartBtn = document.getElementById('cart-count-btn');
+    var cartPopup = document.getElementById('cart-popup');
+    var cartCountEl = document.getElementById('cart-count');
+
+    if (!cartBtn) {
+        console.warn('cart button not found');
+        return;
+    }
+
+    // 切换弹窗显示/隐藏
+    function showPopup(){ cartPopup.style.display='block'; cartBtn.setAttribute('aria-expanded','true'); }
+    function hidePopup(){ cartPopup.style.display='none'; cartBtn.setAttribute('aria-expanded','false'); }
+
+    cartBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (!cartPopup) return;
+        if (cartPopup.style.display === 'block') hidePopup(); else showPopup();
+    });
+
+    // 点击弹窗内不关闭
+    if (cartPopup) cartPopup.addEventListener('click', function(e){ e.stopPropagation(); });
+
+    // 点击文档其他地方关闭弹窗
+    document.addEventListener('click', function(){ if (cartPopup) hidePopup(); });
+
+    // Esc 关闭
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') hidePopup(); });
+
+    // 如果希望动态更新计数（例如通过 AJAX 返回），可调用 updateCartCount(n)
+    window.updateCartCount = function(n){
+        if (!cartCountEl) return;
+        cartCountEl.textContent = (typeof n === 'number') ? n : (n || 0);
+    };
+
+    // 检查控制台错误，若无且還是無響應，請打開 DevTools -> Console 報錯貼給我
 });
 </script>
 </body>

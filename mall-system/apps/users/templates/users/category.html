@@ -89,8 +89,8 @@
                             <button type="button" id="search-reset" class="search-reset" data-target="{% url 'category_view' category %}">重置</button>
                         </form>
 
-                        <!-- 聊天室按钮：置于搜索框下方 -->
-                        <div>
+                        <!-- 聊天室按钮（可选） -->
+                        <div style="margin-top:8px;">
                             <a class="chat-btn" href="/chat/room/{{ request.user.username }}/">聊天室</a>
                         </div>
                     </div>
@@ -105,37 +105,44 @@
                                 <div class="user-dropdown-content">
                                     <span>用户名：{{ request.user.username }}</span>
                                     <span>邮箱：{{ request.user.email|default:"未填写" }}</span>
-                                    <span>手机号：{{ request.user.phone|default:"未填写" }}</span>
                                     <span>注册时间：{{ request.user.date_joined|date:"Y-m-d H:i" }}</span>
                                     <a href="{% url 'user_profile' %}">个人资料</a>
                                     <a class="logout-link" href="{% url 'logout' %}">退出登录</a>
                                 </div>
                             </div>
+
+                            <!-- 购物车按钮（与 dashboard 对齐） -->
                             <span class="cart-count" id="cart-count-btn" tabindex="0">购物车：{{ cart_total_count|default:0 }}</span>
-                            <div id="cart-popup" class="cart-popup">
+
+                            <!-- 购物车弹窗（初始隐藏） -->
+                            <div id="cart-popup" class="cart-popup" style="display:none;">
                                 <h4>购物车明细</h4>
-                                <ul>
-                                    {% for item in cart_items %}
-                                    <li>
-                                        <span>{{ item.product.name }}</span>
-                                        <span>￥{{ item.product.price }}</span>
-                                        <span>数量：{{ item.quantity }}</span>
-                                        <form method="post" action="{% url 'add_to_cart' item.product.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="cart-action-btn">+</button>
-                                        </form>
-                                        <form method="post" action="{% url 'remove_from_cart' item.product.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="cart-action-btn">-</button>
-                                        </form>
-                                    </li>
-                                    {% empty %}
-                                    <li>购物车为空</li>
-                                    {% endfor %}
-                                </ul>
-                                <div style="margin-top:10px;text-align:right;">
-                                    <strong>总价：￥{{ cart_total_price }}</strong>
-                                </div>
+                                <form method="post" action="{% url 'create_order' %}">
+                                    {% csrf_token %}
+                                    <ul>
+                                        {% if cart_items %}
+                                            {% for item in cart_items %}
+                                                <li style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                                    <div style="flex:1;">
+                                                        <div style="font-weight:600">{{ item.product.name }}</div>
+                                                        <div style="color:#777;font-size:13px;">单价：￥{{ item.product.price }} × 数量：{{ item.quantity }}</div>
+                                                    </div>
+                                                    <div style="min-width:90px;text-align:right;">
+                                                        小计：￥{{ item.line_total|default:"0.00"|floatformat:2 }}
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        {% else %}
+                                            <li>购物车为空</li>
+                                        {% endif %}
+                                    </ul>
+                                    <div style="margin-top:10px;text-align:right;">
+                                        <strong>总价：￥{{ cart_total_price|default:0|floatformat:2 }}</strong>
+                                    </div>
+                                    <div style="text-align:right;margin-top:8px;">
+                                        <button type="submit" class="btn">提交订单</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -189,21 +196,32 @@
         </div>
     </div>
 
+    <!-- 底部脚本：重置与购物车切换（放在文件尾部，若已有类似脚本请合并） -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function(){
+        // 重置功能：跳回 data-target 指定的 URL（清除 q/page）
+        document.querySelectorAll('.search-reset').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var target = btn.getAttribute('data-target') || (btn.form && btn.form.action) || window.location.pathname;
+                window.location.href = target;
+            });
+        });
+
+        // 购物车弹窗切换逻辑（与 dashboard 保持一致）
         var cartBtn = document.getElementById('cart-count-btn');
         var cartPopup = document.getElementById('cart-popup');
         if (cartBtn) {
-            cartBtn.addEventListener('click', function(e) {
-                cartPopup.style.display = (cartPopup.style.display === 'block') ? 'none' : 'block';
+            cartBtn.addEventListener('click', function(e){
                 e.stopPropagation();
+                if (!cartPopup) return;
+                cartPopup.style.display = (cartPopup.style.display === 'block') ? 'none' : 'block';
             });
         }
-        document.addEventListener('click', function() { if (cartPopup) cartPopup.style.display = 'none'; });
-        if (cartPopup) cartPopup.addEventListener('click', function(e) { e.stopPropagation(); });
-
-        // 重置按钮逻辑：跳回当前分类页（清除 q 和 page）
-        // 通用重置处理见底部通用脚本
+        if (cartPopup) {
+            cartPopup.addEventListener('click', function(e){ e.stopPropagation(); });
+        }
+        document.addEventListener('click', function(){ if (cartPopup) cartPopup.style.display = 'none'; });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && cartPopup) cartPopup.style.display = 'none'; });
     });
     </script>
 </body>
