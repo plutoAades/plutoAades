@@ -1,37 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-cn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
-    <script>
-        const roomName = "{{ room_name }}";  // 获取房间名
-        const user = "{{ user_username }}";  // 当前用户
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/chat/private/' + roomName + '/');
-
-        socket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const messageDiv = document.createElement('div');
-            messageDiv.textContent = `${data.timestamp} ${data.user}: ${data.message}`;
-            document.getElementById('messages').appendChild(messageDiv);
-        };
-
-        function sendMessage() {
-            const content = document.getElementById('message-input').value;
-            socket.send(JSON.stringify({
-                'action': 'send',
-                'content': content,
-            }));
-            document.getElementById('message-input').value = '';
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>聊天室</title>
+    <style>
+        /* 基于 dashboard 风格：侧边栏 + 主区 */
+        body{font-family: "Segoe UI",Arial,sans-serif;background:#f4f4f4;margin:0;padding:0;}
+        .container{display:flex;min-height:100vh;align-items:flex-start;gap:18px;padding:18px;}
+        .sidebar{width:220px;background:#232e3c;color:#fff;border-radius:8px;padding:20px 12px;flex-shrink:0;box-shadow:2px 8px 30px rgba(0,0,0,0.04);}
+        .sidebar h2{font-size:18px;text-align:center;margin:0 0 18px 0;}
+        .sidebar a{display:block;color:#fff;text-decoration:none;padding:10px 12px;border-radius:6px;margin-bottom:8px;font-size:14px;}
+        .sidebar a:hover,.sidebar a.active{background:#007bff;}
+        .main{flex:1;}
+        .card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 8px 32px rgba(60,120,200,0.06);}
+        .chat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+        .chat-title{font-size:18px;color:#3a7bd5;margin:0;}
+        #chat-log{height:60vh;overflow:auto;border:1px solid #e6eefc;border-radius:8px;padding:12px;background:#fff;}
+        .chat-input-row{display:flex;gap:8px;margin-top:10px;}
+        #chat-message-input{flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;}
+        #chat-message-send{background:linear-gradient(90deg,#3a7bd5,#00d2ff);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;}
+        #chat-message-send:disabled{opacity:0.6;cursor:not-allowed;}
+        .msg{padding:8px 10px;border-radius:8px;margin-bottom:8px;max-width:78%;}
+        .msg.me{background:#e8f5ff;margin-left:auto;color:#033a6b;}
+        .msg.other{background:#f1f5f9;color:#0b2b3a;}
+        .meta{font-size:12px;color:#777;margin-bottom:6px;}
+        @media (max-width:900px){
+            .container{flex-direction:column;padding:12px;}
+            .sidebar{width:100%;display:flex;gap:8px;overflow:auto;}
+            .sidebar a{flex:1;text-align:center;}
+            #chat-log{height:50vh;}
         }
-    </script>
+    </style>
 </head>
 <body>
-    <div>
-        <h1>Private Chat with {{ admin_username }}</h1>
-        <div id="messages"></div>
-        <textarea id="message-input" placeholder="Type your message..."></textarea>
-        <button onclick="sendMessage()">Send</button>
+    <div class="container">
+        <nav class="sidebar" aria-label="侧边菜单">
+            <h2>管理菜单</h2>
+            <a href="{% url 'user_profile' %}"><span>👤</span>&nbsp;个人资料</a>
+            <a href="{% url 'dashboard' %}"><span>🏠</span>&nbsp;商品列表</a>
+            <a href="{% url 'order_list' %}"><span>📦</span>&nbsp;我的订单</a>
+            <a href="{% url 'h5_chat' %}" class="active"><span>💬</span>&nbsp;聊天室</a>
+            {% if request.user.is_superuser %}
+                <a href="{% url 'dashboard_stats' %}"><span>📊</span>&nbsp;数据统计</a>
+            {% endif %}
+            <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.04);padding-top:12px;font-size:13px;color:#d7e7ff;">
+                <div>当前用户</div>
+                <div style="font-weight:700;margin-top:6px;">{{ request.user.username }}</div>
+                <div style="margin-top:6px;color:#cfe6ff;font-size:12px;">管理员：{{ admin_username|default:"管理员" }}</div>
+            </div>
+        </nav>
+
+        <main class="main" role="main">
+            <div class="card" aria-label="聊天区域">
+                <div class="chat-header">
+                    <h2 class="chat-title">与管理员私聊</h2>
+                    <div style="color:#666;font-size:13px;">
+                        用户：{{ request.user.username }}　
+                        管理：{{ admin_username|default:"管理员" }}
+                    </div>
+                </div>
+
+                <div id="chat-log" aria-live="polite" aria-atomic="false"></div>
+
+                <div class="chat-input-row">
+                    <input id="chat-message-input" type="text" placeholder="输入消息并回车发送..." autocomplete="off" />
+                    <button id="chat-message-send" class="btn" type="button">发送</button>
+                </div>
+            </div>
+        </main>
     </div>
+
+<script>
+(function(){
+    const user = "{{ user_username|default:request.user.username|escapejs }}";
+    const admin = "{{ admin_username|default:''|escapejs }}";
+    const tplRoom = "{{ room_name|default:''|escapejs }}";
+    const roomName = tplRoom && tplRoom.length ? tplRoom : [user, admin].sort().join('__');
+
+    const chatLog = document.getElementById('chat-log');
+    const input = document.getElementById('chat-message-input');
+    const sendBtn = document.getElementById('chat-message-send');
+
+    function appendMsg(sender, text, isMe){
+        const d = document.createElement('div');
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = sender + ' · ' + (new Date()).toLocaleString();
+        const msg = document.createElement('div');
+        msg.className = 'msg ' + (isMe ? 'me' : 'other');
+        msg.textContent = text || '';
+        d.appendChild(meta);
+        d.appendChild(msg);
+        chatLog.appendChild(d);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = protocol + '://' + location.host + '/ws/chat/private/' + encodeURIComponent(roomName) + '/';
+    let ws;
+    try {
+        ws = new WebSocket(wsUrl);
+    } catch (e) {
+        appendMsg('系统', '无法建立 WebSocket 连接', false);
+        console.error(e);
+    }
+
+    if (ws) {
+        ws.onopen = function(){ appendMsg('系统','已连接', false); sendBtn.disabled = false; };
+        ws.onmessage = function(e){
+            try {
+                const data = JSON.parse(e.data);
+                const sender = data.user || data.sender || data.username || '对方';
+                const message = data.message || data.content || data.text || '';
+                const isMe = (sender === user);
+                appendMsg(sender, message, isMe);
+            } catch (err) {
+                console.error('ws onmessage parse error', err, e.data);
+            }
+        };
+        ws.onclose = function(){ appendMsg('系统','连接已关闭', false); sendBtn.disabled = true; };
+        ws.onerror = function(err){ console.error('ws error', err); };
+    } else {
+        sendBtn.disabled = true;
+    }
+
+    function sendMessage(){
+        const v = input.value.trim();
+        if (!v) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN){
+            appendMsg('系统','未连接，消息未发送', false);
+            return;
+        }
+        const payload = { action: 'send', message_type: 'text', content: v };
+        ws.send(JSON.stringify(payload));
+        appendMsg(user, v, true);
+        input.value = '';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+    });
+})();
+</script>
 </body>
 </html>
