@@ -33,16 +33,8 @@ for item in data:
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query, (product_id, name, description, price, category, created_at, stock))
-        
-        # 如果有外键依赖，确保相关表的数据也存在，例如插入 productimage 数据
-        # 在这里插入相关的 productimage 数据，例如：
-        # insert_product_image_query = """
-        #     INSERT INTO products_productimage (product_id, image_url)
-        #     VALUES (%s, %s)
-        # """
-        # cursor.execute(insert_product_image_query, (product_id, 'image_url_here'))
-
-        conn.commit()  # 提交事务
+        # 提交事务
+        conn.commit()  
         print(f"成功插入商品: {name} (ID: {product_id})")
     except mysql.connector.Error as err:
         print(f"插入商品 {name} 失败: {err}")

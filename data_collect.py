@@ -220,8 +220,8 @@ def parse_single_item(li, driver, proxy_pool, default_sess):
         "name": title,
         "description": name,
         "price": price,
-        "image_main": local_main,  # 这里将本地路径赋值给 image_main
-        "detail_info": detail_info,  # 这里传递 detail_info 字典
+        "image_main": local_main, 
+        "detail_info": detail_info,  
         "detail_images": detail_images
     }
 

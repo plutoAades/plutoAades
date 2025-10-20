@@ -36,11 +36,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'apps.products',
     'apps.orders',
     'apps.users',
     'apps.chat',
-    'channels',
+
 ]
 
 MIDDLEWARE = [
@@ -143,12 +144,15 @@ AUTH_USER_MODEL = 'users.User'
 
 # 推荐用 Redis 作为 Channels 的后端
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-        },
-    },
+    # "default": {
+    #     "BACKEND": "channels_redis.core.RedisChannelLayer",
+    #     "CONFIG": {
+    #         "hosts": [("127.0.0.1", 6379)],
+    #     },
+    # },
+        "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # 开发用；生产请改为 channels_redis
+    }
 }
 
 SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 会话有效期为7天
@@ -157,3 +161,4 @@ SESSION_SAVE_EVERY_REQUEST = True  # 每次请求刷新会话过期时间
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']
